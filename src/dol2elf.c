@@ -34,7 +34,7 @@ THE SOFTWARE.
 
 #define SHSTRNDX 1
 
-static size_t count_loads(const Dol_Hdr *dhdr)
+static size_t count_loads(const Dol_Hdr *dhdr, int use_bss_fix)
 {
   size_t count = 0;
   for (int i=0; i != DOL_TEXT_COUNT; ++i)
@@ -43,8 +43,11 @@ static size_t count_loads(const Dol_Hdr *dhdr)
   for (int i=0; i != DOL_DATA_COUNT; ++i)
     if (dhdr->data_size[i])
       ++count;
-  if (dhdr->bss_size)
-    ++count;
+  if (dhdr->bss_size) {
+      ++count;
+      if (use_bss_fix)
+        count += 2;
+  }
   return count;
 }
 
@@ -122,8 +125,20 @@ int dol2elf(const char *dol_filename, const char *elf_filename)
   }
   dol_dump(&dhdr, stderr);
 
+  // BSS Straddle fix
+  uint32_t data_count = 0;
+  for (int i=0; i != DOL_DATA_COUNT; ++i) {
+    uint32_t addr = ntohl(dhdr.data_address[i]);
+    if (addr != 0)
+      ++data_count;
+  }
+  uint32_t bss_end = dhdr.bss_address + dhdr.bss_size;
+  int use_bss_fix = data_count >= 2 &&
+                    dhdr.bss_address <= dhdr.data_address[data_count - 2] &&
+                    dhdr.data_address[data_count - 2] < bss_end;
+
   // How many program headers:
-  elf.load_count = count_loads(&dhdr);
+  elf.load_count = count_loads(&dhdr, use_bss_fix);
   // One ELF segment per DOL segment:
   elf.phnum      = elf.load_count;
   // One ELF section per DOL segment
@@ -132,7 +147,7 @@ int dol2elf(const char *dol_filename, const char *elf_filename)
 
   // Create the strtab:
   strtab_create(&elf.strtab);
-  strtab_fill(&elf.strtab, &dhdr);
+  strtab_fill(&elf.strtab, &dhdr, use_bss_fix);
 
   // Offset added by the ELF data:
   elf.strtab_offset =
@@ -149,8 +164,8 @@ int dol2elf(const char *dol_filename, const char *elf_filename)
   fill_elf_header(&dhdr, &elf);
   assert(elf.phnum == ntohs(elf.ehdr.e_phnum));
 
-  create_shdrs(&dhdr, &elf);
-  create_phdrs(&dhdr, &elf);
+  create_shdrs(&dhdr, &elf, use_bss_fix);
+  create_phdrs(&dhdr, &elf, use_bss_fix);
 
   elf_file = fopen(elf_filename, "wb");
   if (!elf_file) {

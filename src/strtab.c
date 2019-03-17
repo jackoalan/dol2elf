@@ -71,7 +71,7 @@ size_t strtab_index(struct strtab_info *strtab, const char *name)
   return res;
 }
 
-void strtab_fill(struct strtab_info *strtab, Dol_Hdr *dhdr)
+void strtab_fill(struct strtab_info *strtab, Dol_Hdr *dhdr, int use_bss_fix)
 {
   for (int i=0; i != DOL_TEXT_COUNT; ++i)
     if (dhdr->text_size[i])
@@ -81,8 +81,13 @@ void strtab_fill(struct strtab_info *strtab, Dol_Hdr *dhdr)
     if (dhdr->data_size[i])
       strtab_index(strtab, data_sections[i]);
 
-  if (dhdr->bss_size)
+  if (dhdr->bss_size) {
     strtab_index(strtab, ".bss");
+    if (use_bss_fix) {
+      strtab_index(strtab, ".sbss");
+      strtab_index(strtab, ".sbss2");
+    }
+  }
 
   strtab_index(strtab, ".shstrtab");
   strtab_index(strtab, ".dolhdr");

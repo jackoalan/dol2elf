@@ -73,9 +73,9 @@ struct Elf {
 void strtab_create(struct strtab_info *strtatb);
 void strtab_destroy(struct strtab_info *strtatb);
 size_t strtab_index(struct strtab_info *strtan, const char *name);
-void strtab_fill(struct strtab_info *strtatb, Dol_Hdr *dhdr);
+void strtab_fill(struct strtab_info *strtatb, Dol_Hdr *dhdr, int use_bss_fix);
 
-void create_shdrs(Dol_Hdr *dhdr, struct Elf *elf);
-void create_phdrs(Dol_Hdr *dhdr, struct Elf *elf);
+void create_shdrs(Dol_Hdr *dhdr, struct Elf *elf, int use_bss_fix);
+void create_phdrs(Dol_Hdr *dhdr, struct Elf *elf, int use_bss_fix);
 
 #endif

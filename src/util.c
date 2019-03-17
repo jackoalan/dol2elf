@@ -59,8 +59,8 @@ int dol_dump(const Dol_Hdr *header, FILE *file)
 }
 
 const char* text_sections[DOL_TEXT_COUNT] = {
-  ".text.0",
-  ".text.1",
+  ".init",
+  ".text",
   ".text.2",
   ".text.3",
   ".text.4",
@@ -69,14 +69,14 @@ const char* text_sections[DOL_TEXT_COUNT] = {
 };
 
 const char* data_sections[DOL_DATA_COUNT] = {
-  ".data.0",
-  ".data.1",
-  ".data.2",
-  ".data.3",
-  ".data.4",
-  ".data.5",
-  ".data.6",
-  ".data.7",
+  ".extab",
+  ".extabindex",
+  ".ctors",
+  ".dtors",
+  ".rodata",
+  ".data",
+  ".sdata",
+  ".sdata2",
   ".data.8",
   ".data.9",
   ".data.10"
